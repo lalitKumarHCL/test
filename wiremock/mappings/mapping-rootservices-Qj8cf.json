@@ -1,0 +1,28 @@
+{
+  "id" : "1134da7a-d277-36d3-9fb9-573f5d8570ce",
+  "request" : {
+    "url" : "/rootservices",
+    "method" : "GET",
+    "headers" : {
+      "Accept" : {
+        "equalTo" : "application/rdf+xml"
+      }
+    }
+  },
+  "response" : {
+    "status" : 200,
+    "bodyFileName" : "body-rootservices-Qj8cf.xml",
+    "headers" : {
+      "X-Powered-By" : "Servlet/3.0",
+      "Strict-Transport-Security" : "max-age=31536000",
+      "x-com-ibm-team-scenario" : "10.134.65.208",
+      "ETag" : "\"CLkDA1TEeSyQ+75g7lGmhrxs9mQ=\"",
+      "Date" : "Mon, 21 Oct 2019 16:10:08 GMT",
+      "Expires" : "Mon, 21 Oct 2019 16:15:08 GMT",
+      "Cache-Control" : "public",
+      "Content-Type" : "application/rdf+xml; charset=UTF-8",
+      "Content-Language" : "en-US"
+    }
+  },
+  "uuid" : "1134da7a-d277-36d3-9fb9-573f5d8570ce"
+}
