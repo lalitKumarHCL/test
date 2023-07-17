@@ -13,5 +13,10 @@ jobs:
         with:
           asoc_key: ${{secrets.ASOC_KEY}}
           asoc_secret: ${{secrets.ASOC_SECRET}}
+          publish_on_merge: true
+          application_id: 6e49c034-c6dc-4c89-800c-6d8226aef5cb
+          issue_status: "inprogress"
+          scan_base_name: "CodeSweep"
+          personal_scan: true
     env: 
       GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
