@@ -34,10 +34,9 @@ jobs:
 
   build:
 
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
 #     - name: SonarCloud Scan
 #       uses: sonarsource/sonarqube-scan-action@master
 #       env:
@@ -63,9 +62,14 @@ jobs:
     - name: Push
       run: |
           docker push lalitku/hybrid-comp-image:${{ github.run_number }}
+  ucd:
+    runs-on: self-hosted
+
+    steps:
     - name: Import Component Into UCD
       run: |
         curl --insecure --request PUT 'https://10.134.119.198:8443/cli/component/integrate' --header 'Content-Type: application/json' --header 'Authorization: Basic YWRtaW46YWRtaW4=' --data '{"component": "HybridAppComp1","properties": {"version": ${{ github.run_number }},"description": ""}}'
     - name: Create Snapshot
       run: |
         curl --insecure --request PUT 'https://10.134.119.198:8443/cli/snapshot/createSnapshot' --header 'Content-Type: application/json' --header 'Authorization: Basic YWRtaW46YWRtaW4=' --data '{"name": ${{ github.run_number }},"application": "Hybrid App","description": "Some snapshot","versions": [{"HybridAppComp1": "latest"}]}'
+
