@@ -14,14 +14,13 @@ jobs:
           response=$(curl --location 'https://cloud.appscan.com/api/V2/Account/ApiKeyLogin' --header 'Content-Type: application/json' --data '{ "KeyId": "f6daeb7b-b2f6-6ea9-0b83-aefb0b7a3895", "KeySecret": "hy2qF5nDayy8AvCJlIW7FToFrNVbSQIjw5BxMd5m7zEh" }')
           token=$(echo "$response" | jq -r '.Token')
           echo "::set-output name=token::$token"
-
       - name: UploadFile
         id: upfile
         run: |
-          respons=$(curl --location 'https://cloud.appscan.com/api/v2/FileUpload' --header 'Authorization: Bearer ${{ steps.curl.outputs.token }}' --form 'fileToUpload=@demo.irx')
+          respons=$(curl --location 'https://cloud.appscan.com/api/v2/FileUpload' --header "Authorization: Bearer ${{ steps.curl.outputs.token }}" --form 'fileToUpload=@demo.irx')
           fileId=$(echo "$respons" | jq -r '.FileId')
           echo "::set-output name=fileId::$fileId"
       - name: Run Scan
         id: runScan
         run: |
-          curl --location 'https://cloud.appscan.com/api/v2/Scans/StaticAnalyzer' --header 'Content-Type: application/json' --header 'Authorization: Bearer ${{ steps.curl.outputs.token }}' --data '{"ApplicationFileId": ${{ steps.upfile.outputs.fileId }},"ScanName": "Scan1","EnableMailNotification": true,"Locale": "en-US","AppId": "6e49c034-c6dc-4c89-800c-6d8226aef5cb","Execute": true,"Personal": false,"Comment": ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}}'
+          curl --location 'https://cloud.appscan.com/api/v2/Scans/StaticAnalyzer' --header 'Content-Type: application/json' --header "Authorization: Bearer ${{ steps.curl.outputs.token }}" --data "{\"ApplicationFileId\": \"${{ steps.upfile.outputs.fileId }}\",\"ScanName\": \"Scan1\",\"EnableMailNotification\": true,\"Locale\": \"en-US\",\"AppId\": \"6e49c034-c6dc-4c89-800c-6d8226aef5cb\",\"Execute\": true,\"Personal\": false,\"Comment\": \"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
