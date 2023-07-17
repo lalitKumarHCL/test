@@ -63,6 +63,7 @@ jobs:
       run: |
           docker push lalitku/hybrid-comp-image:${{ github.run_number }}
   ucd:
+    needs: [build, scan]
     runs-on: self-hosted
 
     steps:
