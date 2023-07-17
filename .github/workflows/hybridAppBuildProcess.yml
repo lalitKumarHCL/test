@@ -10,6 +10,27 @@ on:
   
 
 jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Get Token
+        id: curl
+        run: |
+          response=$(curl --location 'https://cloud.appscan.com/api/V2/Account/ApiKeyLogin' --header 'Content-Type: application/json' --data '{ "KeyId": "f6daeb7b-b2f6-6ea9-0b83-aefb0b7a3895", "KeySecret": "hy2qF5nDayy8AvCJlIW7FToFrNVbSQIjw5BxMd5m7zEh" }')
+          token=$(echo "$response" | jq -r '.Token')
+          echo "::set-output name=token::$token"
+      - name: UploadFile
+        id: upfile
+        run: |
+          respons=$(curl --location 'https://cloud.appscan.com/api/v2/FileUpload' --header "Authorization: Bearer ${{ steps.curl.outputs.token }}" --form 'fileToUpload=@demo.irx')
+          fileId=$(echo "$respons" | jq -r '.FileId')
+          echo "::set-output name=fileId::$fileId"
+      - name: Run Scan
+        id: runScan
+        run: |
+          curl --location 'https://cloud.appscan.com/api/v2/Scans/StaticAnalyzer' --header 'Content-Type: application/json' --header "Authorization: Bearer ${{ steps.curl.outputs.token }}" --data "{\"ApplicationFileId\": \"${{ steps.upfile.outputs.fileId }}\",\"ScanName\": \"Scan ${{ github.run_number }}\",\"EnableMailNotification\": true,\"Locale\": \"en-US\",\"AppId\": \"f577b718-e41d-42ce-88db-7b64f5402298\",\"Execute\": true,\"Personal\": false,\"Comment\": \"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
 
   build:
 
@@ -17,14 +38,14 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: SonarCloud Scan
-      uses: sonarsource/sonarqube-scan-action@master
-      env:
-        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-      with:
-        args: >
-          -Dsonar.analysis.buildUrl=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+#     - name: SonarCloud Scan
+#       uses: sonarsource/sonarqube-scan-action@master
+#       env:
+#         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+#         SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+#       with:
+#         args: >
+#           -Dsonar.analysis.buildUrl=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
     - name: Build the Docker image
       run: |
         docker pull minddocdev/node-alpine:latest
