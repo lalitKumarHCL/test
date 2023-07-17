@@ -23,4 +23,4 @@ jobs:
       - name: Run Scan
         id: runScan
         run: |
-          curl --location 'https://cloud.appscan.com/api/v2/Scans/StaticAnalyzer' --header 'Content-Type: application/json' --header "Authorization: Bearer ${{ steps.curl.outputs.token }}" --data "{\"ApplicationFileId\": \"${{ steps.upfile.outputs.fileId }}\",\"ScanName\": \"Scan1\",\"EnableMailNotification\": true,\"Locale\": \"en-US\",\"AppId\": \"6e49c034-c6dc-4c89-800c-6d8226aef5cb\",\"Execute\": true,\"Personal\": false,\"Comment\": \"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
+          curl --location 'https://cloud.appscan.com/api/v2/Scans/StaticAnalyzer' --header 'Content-Type: application/json' --header "Authorization: Bearer ${{ steps.curl.outputs.token }}" --data "{\"ApplicationFileId\": \"${{ steps.upfile.outputs.fileId }}\",\"ScanName\": \"Scan ${{ github.run_id }}\",\"EnableMailNotification\": true,\"Locale\": \"en-US\",\"AppId\": \"6e49c034-c6dc-4c89-800c-6d8226aef5cb\",\"Execute\": true,\"Personal\": false,\"Comment\": \"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
