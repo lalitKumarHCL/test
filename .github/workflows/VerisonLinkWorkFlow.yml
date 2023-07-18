@@ -41,10 +41,11 @@ jobs:
 #       with:
 #         args: >
 #           -Dsonar.analysis.buildUrl=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    - name: Checkout2
+      uses: actions/checkout@v1
     - name: Build the Docker image
       run: |
-        docker pull minddocdev/node-alpine:latest
-        docker build -t lalitku/hybrid-comp-image-two:1.0.0-${{ github.run_number }} --build-arg BASE_IMAGE=minddocdev/node-alpine:latest --label build.url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} .
+        docker build -t lalitku/hybrid-comp-image-two:1.0.0-${{ github.run_number }} --label build.url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} .
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
     - name: Set up Docker Buildx
