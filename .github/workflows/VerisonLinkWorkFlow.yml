@@ -66,6 +66,10 @@ jobs:
     - name: Import Component Into UCD
       run: |
         curl --insecure --request PUT 'https://10.134.119.198:8443/cli/component/integrate' --header 'Content-Type: application/json' --header 'Authorization: Basic YWRtaW46YWRtaW4=' --data '{"component": "HybridApp2Comp1","properties": {"version": "1.0.0-${{ github.run_number }}","description": ""}}'
+    - name: Install jq
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jq
     - name: Run curl with loop and timeout
       id: find_component_version
       run: |
