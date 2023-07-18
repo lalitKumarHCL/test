@@ -1,0 +1,71 @@
+name: Version Link Workflow
+
+# Controls when the workflow will run
+on:
+  workflow_dispatch:
+  
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Get Token
+        id: curl
+        run: |
+          response=$(curl --location 'https://cloud.appscan.com/api/V2/Account/ApiKeyLogin' --header 'Content-Type: application/json' --data '{ "KeyId": "f6daeb7b-b2f6-6ea9-0b83-aefb0b7a3895", "KeySecret": "hy2qF5nDayy8AvCJlIW7FToFrNVbSQIjw5BxMd5m7zEh" }')
+          token=$(echo "$response" | jq -r '.Token')
+          echo "::set-output name=token::$token"
+      - name: UploadFile
+        id: upfile
+        run: |
+          respons=$(curl --location 'https://cloud.appscan.com/api/v2/FileUpload' --header "Authorization: Bearer ${{ steps.curl.outputs.token }}" --form 'fileToUpload=@demo.irx')
+          fileId=$(echo "$respons" | jq -r '.FileId')
+          echo "::set-output name=fileId::$fileId"
+      - name: Run Scan
+        id: runScan
+        run: |
+          curl --location 'https://cloud.appscan.com/api/v2/Scans/StaticAnalyzer' --header 'Content-Type: application/json' --header "Authorization: Bearer ${{ steps.curl.outputs.token }}" --data "{\"ApplicationFileId\": \"${{ steps.upfile.outputs.fileId }}\",\"ScanName\": \"Scan ${{ github.run_number }}\",\"EnableMailNotification\": true,\"Locale\": \"en-US\",\"AppId\": \"57dff60b-4ef7-4490-b563-d534535dd0c2\",\"Execute\": true,\"Personal\": false,\"Comment\": \"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+#     - name: SonarCloud Scan
+#       uses: sonarsource/sonarqube-scan-action@master
+#       env:
+#         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+#         SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+#       with:
+#         args: >
+#           -Dsonar.analysis.buildUrl=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    - name: Build the Docker image
+      run: |
+        docker pull minddocdev/node-alpine:latest
+        docker build -t lalitku/hybrid-comp-image-two:1.0.0-${{ github.run_number }} --build-arg BASE_IMAGE=minddocdev/node-alpine:latest --label build.url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} .
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: lalitku
+        password: Lalit/2698
+    - name: Push
+      run: |
+          docker push lalitku/hybrid-comp-image-two:1.0.0-${{ github.run_number }}
+  ucd:
+    needs: [build, scan]
+    runs-on: self-hosted
+
+    steps:
+    - name: Import Component Into UCD
+      run: |
+        curl --insecure --request PUT 'https://10.134.119.198:8443/cli/component/integrate' --header 'Content-Type: application/json' --header 'Authorization: Basic YWRtaW46YWRtaW4=' --data '{"component": "HybridApp2Comp1","properties": {"version": "1.0.0-${{ github.run_number }}","description": ""}}'
+        sleep 45
+    - name: Create Snapshot
+      run: |
+        curl --insecure --request PUT 'https://10.134.119.198:8443/cli/snapshot/createSnapshot' --header 'Content-Type: application/json' --header 'Authorization: Basic YWRtaW46YWRtaW4=' --data '{"name": RC-${{ github.run_number }},"application": "Hybrid App 2","description": "Some snapshot","versions": [{"HybridApp2Comp1": "1.0.0-${{ github.run_number }}"}]}'
