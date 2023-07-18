@@ -1,1 +1,1 @@
-FROM 5ce65d7b0fde
+FROM minddocdev/node-alpine:latest
