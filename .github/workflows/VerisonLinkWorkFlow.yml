@@ -71,31 +71,31 @@ jobs:
         wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
         chmod +x jq
         sudo mv jq /usr/local/bin/
-    - name: Run curl with loop and timeout
-      id: find_component_version
-      run: |
-        timeout_duration=600  # Set the timeout duration in seconds (e.g., 300 seconds = 5 minutes)
-        target_version_name="1.0.0-${{ github.run_number }}"  # Replace with the specific version name you are looking for
+#     - name: Run curl with loop and timeout
+#       id: find_component_version
+#       run: |
+#         timeout_duration=600  # Set the timeout duration in seconds (e.g., 300 seconds = 5 minutes)
+#         target_version_name="1.0.0-${{ github.run_number }}"  # Replace with the specific version name you are looking for
 
-        end_time=$((SECONDS + timeout_duration))
+#         end_time=$((SECONDS + timeout_duration))
 
-        while [ $SECONDS -lt $end_time ]; do
-          response=$(curl --insecure  --request GET 'https://10.134.119.198:8443/cli/component/versions?component=HybridApp2Comp1' --header 'Content-Type: application/json' --header 'Authorization: Basic YWRtaW46YWRtaW4=')
-          version_names=$(echo "$response" | jq -r '.[].name')
+#         while [ $SECONDS -lt $end_time ]; do
+#           response=$(curl --insecure  --request GET 'https://10.134.119.198:8443/cli/component/versions?component=HybridApp2Comp1' --header 'Content-Type: application/json' --header 'Authorization: Basic YWRtaW46YWRtaW4=')
+#           version_names=$(echo "$response" | jq -r '.[].name')
 
-          if echo "$version_names" | grep -q "$target_version_name"; then
-            echo "Found version with name: $target_version_name"
-            echo "$response"  # Print the full response for the matching version (optional)
-            break
-          fi
+#           if echo "$version_names" | grep -q "$target_version_name"; then
+#             echo "Found version with name: $target_version_name"
+#             echo "$response"  # Print the full response for the matching version (optional)
+#             break
+#           fi
 
-          sleep 10  # Adjust the sleep duration (in seconds) between each curl request
-        done
+#           sleep 10  # Adjust the sleep duration (in seconds) between each curl request
+#         done
 
-        if [ $SECONDS -ge $end_time ]; then
-          echo "Timeout reached. Version with name $target_version_name not found."
-          exit 1
-        fi
+#         if [ $SECONDS -ge $end_time ]; then
+#           echo "Timeout reached. Version with name $target_version_name not found."
+#           exit 1
+#         fi
     - name: Create Snapshot
       run: |
-        curl --insecure --request PUT 'https://10.134.119.198:8443/cli/snapshot/createSnapshot' --header 'Content-Type: application/json' --header 'Authorization: Basic YWRtaW46YWRtaW4=' --data '{"name": RC-${{ github.run_number }},"application": "Hybrid App 2","description": "Some snapshot","versions": [{"HybridApp2Comp1": "1.0.0-${{ github.run_number }}"}]}'
+        curl --insecure --request PUT 'https://10.134.119.198:8443/cli/snapshot/createSnapshot' --header 'Content-Type: application/json' --header 'Authorization: Basic YWRtaW46YWRtaW4=' --data '{"name": RC-${{ github.run_number }},"application": "Hybrid App 2","description": "Some snapshot","versions": [{"HybridApp2Comp1": "latest"}]}'
