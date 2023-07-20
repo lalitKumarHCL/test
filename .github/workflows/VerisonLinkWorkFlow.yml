@@ -98,4 +98,4 @@ jobs:
         fi
     - name: Create Snapshot
       run: |
-        curl --insecure --request PUT 'https://10.134.119.198:8443/cli/snapshot/createSnapshot' --header 'Content-Type: application/json' --header 'Authorization: Basic YWRtaW46YWRtaW4=' --data '{"name": RC-${{ github.run_number }},"application": "Hybrid App 2","description": "Some snapshot","versions": [{"HybridApp2Comp2": "2.0.0-${{ github.run_number }}"}]}'
+        curl --insecure --request PUT 'https://10.134.119.198:8443/cli/snapshot/createSnapshot' --header 'Content-Type: application/json' --header 'Authorization: Basic YWRtaW46YWRtaW4=' --data '{"name": July-2023-RC-1,"application": "Hybrid App 2","description": "Some snapshot","versions": [{"HybridApp2Comp2": "2.0.0-${{ github.run_number }}"}]}'
