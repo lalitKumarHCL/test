@@ -45,8 +45,8 @@ jobs:
       uses: actions/checkout@v1
     - name: Build the Docker image
       run: |
-        docker build -t lalitku/hybrid-comp-one-image-two:2.0.0-${{ github.run_number }} --label build.url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} .
-        docker build -t lalitku/hybrid-comp-two-image-two:2.0.0-${{ github.run_number }} --label build.url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} .
+        docker build -t lalitku/hybrid-comp-one-image-two:Comp1-${{ github.run_number }} --label build.url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} .
+        docker build -t lalitku/hybrid-comp-two-image-two:Comp2-${{ github.run_number }} --label build.url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} .
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
     - name: Set up Docker Buildx
@@ -58,8 +58,8 @@ jobs:
         password: Lalit/2698
     - name: Push
       run: |
-          docker push lalitku/hybrid-comp-one-image-two:2.0.0-${{ github.run_number }}
-          docker push lalitku/hybrid-comp-two-image-two:2.0.0-${{ github.run_number }}
+          docker push lalitku/hybrid-comp-one-image-two:Comp1-${{ github.run_number }}
+          docker push lalitku/hybrid-comp-two-image-two:Comp2-${{ github.run_number }}
   ucd:
     needs: [build, scan]
     runs-on: self-hosted
