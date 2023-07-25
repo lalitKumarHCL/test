@@ -1,0 +1,104 @@
+name: Version Link Workflow 2
+
+# Controls when the workflow will run
+on:
+  workflow_dispatch:
+  
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Get Token
+        id: curl
+        run: |
+          response=$(curl --location 'https://cloud.appscan.com/api/V2/Account/ApiKeyLogin' --header 'Content-Type: application/json' --data '{ "KeyId": "f6daeb7b-b2f6-6ea9-0b83-aefb0b7a3895", "KeySecret": "hy2qF5nDayy8AvCJlIW7FToFrNVbSQIjw5BxMd5m7zEh" }')
+          token=$(echo "$response" | jq -r '.Token')
+          echo "::set-output name=token::$token"
+      - name: UploadFile
+        id: upfile
+        run: |
+          respons=$(curl --location 'https://cloud.appscan.com/api/v2/FileUpload' --header "Authorization: Bearer ${{ steps.curl.outputs.token }}" --form 'fileToUpload=@demo.irx')
+          fileId=$(echo "$respons" | jq -r '.FileId')
+          echo "::set-output name=fileId::$fileId"
+      - name: Run Scan
+        id: runScan
+        run: |
+          curl --location 'https://cloud.appscan.com/api/v2/Scans/StaticAnalyzer' --header 'Content-Type: application/json' --header "Authorization: Bearer ${{ steps.curl.outputs.token }}" --data "{\"ApplicationFileId\": \"${{ steps.upfile.outputs.fileId }}\",\"ScanName\": \"Scan ${{ github.run_number }}\",\"EnableMailNotification\": true,\"Locale\": \"en-US\",\"AppId\": \"99a07bf5-944c-4648-94dd-477e19cb1242\",\"Execute\": true,\"Personal\": false,\"Comment\": \"${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}\"}"
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+#     - name: SonarCloud Scan
+#       uses: sonarsource/sonarqube-scan-action@master
+#       env:
+#         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+#         SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+#       with:
+#         args: >
+#           -Dsonar.analysis.buildUrl=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    - name: Checkout2
+      uses: actions/checkout@v1
+    - name: Build the Docker image
+      run: |
+        docker build -t lalitku/hybrid-comp-one-image:Comp1-${{ github.run_number }} --label build.url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} .
+        docker build -t lalitku/hybrid-comp-two-image:Comp2-${{ github.run_number }} --label build.url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} .
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Login to Docker Hub
+      uses: docker/login-action@v2
+      with:
+        username: lalitku
+        password: Lalit/2698
+    - name: Push
+      run: |
+          docker push lalitku/hybrid-comp-one-image:Comp1-${{ github.run_number }}
+          docker push lalitku/hybrid-comp-two-image:Comp2-${{ github.run_number }}
+  ucd:
+    needs: [build, scan]
+    runs-on: self-hosted
+
+    steps:
+    - name: Import Component Into UCD
+      run: |
+        curl --insecure --request PUT 'https://10.134.119.198:8443/cli/component/integrate' --header 'Content-Type: application/json' --header 'Authorization: Basic YWRtaW46YWRtaW4=' --data '{"component": "HybridAppComp1","properties": {"version": "Comp1-${{ github.run_number }}","description": ""}}'
+        curl --insecure --request PUT 'https://10.134.119.198:8443/cli/component/integrate' --header 'Content-Type: application/json' --header 'Authorization: Basic YWRtaW46YWRtaW4=' --data '{"component": "HybridAppComp2","properties": {"version": "Comp2-${{ github.run_number }}","description": ""}}'
+    - name: Install jq
+      run: |
+        wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+        chmod +x jq
+        sudo mv jq /usr/local/bin/
+    - name: Run curl with loop and timeout
+      id: find_component_version
+      run: |
+        timeout_duration=600  # Set the timeout duration in seconds (e.g., 300 seconds = 5 minutes)
+        target_version_name="Comp1-${{ github.run_number }}"  # Replace with the specific version name you are looking for
+
+        end_time=$((SECONDS + timeout_duration))
+
+        while [ $SECONDS -lt $end_time ]; do
+          response=$(curl --insecure  --request GET 'https://10.134.119.198:8443/cli/component/versions?component=HybridAppComp1' --header 'Content-Type: application/json' --header 'Authorization: Basic YWRtaW46YWRtaW4=')
+          version_names=$(echo "$response" | jq -r '.[].name')
+
+          if echo "$version_names" | grep -q "$target_version_name"; then
+            echo "Found version with name: $target_version_name"
+            echo "$response"  # Print the full response for the matching version (optional)
+            break
+          fi
+
+          sleep 10  # Adjust the sleep duration (in seconds) between each curl request
+        done
+
+        if [ $SECONDS -ge $end_time ]; then
+          echo "Timeout reached. Version with name $target_version_name not found."
+          exit 1
+        fi
+    - name: Create Snapshot
+      run: |
+        curl --insecure --request PUT 'https://10.134.119.198:8443/cli/snapshot/createSnapshot' --header 'Content-Type: application/json' --header 'Authorization: Basic YWRtaW46YWRtaW4=' --data '{"name": "July-2023-RC-${{ github.run_number }}","application": "Hybrid App","description": "Some snapshot","versions": [{"HybridAppComp1": "Comp1-${{ github.run_number }}"},{"HybridAppComp2": "latest"}]}'
