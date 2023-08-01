@@ -45,7 +45,7 @@ jobs:
       uses: actions/checkout@v1
     - name: Build the Docker image
       run: |
-        docker build -t lalitku/hybrid-comp-one-image-two:Comp1-${{ github.run_number }} --label build.url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} .
+        docker build -t lalitku/hybrid-comp-one-image-two:Comp1-1.2.3-${{ github.run_number }}-4.5.6 --label build.url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} .
         docker build -t lalitku/hybrid-comp-two-image-two:Comp2-${{ github.run_number }} --label build.url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }} .
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
@@ -58,7 +58,7 @@ jobs:
         password: Lalit/2698
     - name: Push
       run: |
-          docker push lalitku/hybrid-comp-one-image-two:Comp1-${{ github.run_number }}
+          docker push lalitku/hybrid-comp-one-image-two:Comp1-1.2.3-${{ github.run_number }}-4.5.6
           docker push lalitku/hybrid-comp-two-image-two:Comp2-${{ github.run_number }}
   ucd:
     needs: [build, scan]
@@ -67,7 +67,7 @@ jobs:
     steps:
     - name: Import Component Into UCD
       run: |
-        curl --insecure --request PUT 'https://10.134.119.198:8443/cli/component/integrate' --header 'Content-Type: application/json' --header 'Authorization: Basic YWRtaW46YWRtaW4=' --data '{"component": "HybridApp2Comp1","properties": {"version": "Comp1-${{ github.run_number }}","description": ""}}'
+        curl --insecure --request PUT 'https://10.134.119.198:8443/cli/component/integrate' --header 'Content-Type: application/json' --header 'Authorization: Basic YWRtaW46YWRtaW4=' --data '{"component": "HybridApp2Comp1","properties": {"version": "Comp1-1.2.3-${{ github.run_number }}-4.5.6","description": ""}}'
         curl --insecure --request PUT 'https://10.134.119.198:8443/cli/component/integrate' --header 'Content-Type: application/json' --header 'Authorization: Basic YWRtaW46YWRtaW4=' --data '{"component": "HybridApp2Comp2","properties": {"version": "Comp2-${{ github.run_number }}","description": ""}}'
     - name: Install jq
       run: |
@@ -78,7 +78,7 @@ jobs:
       id: find_component_version
       run: |
         timeout_duration=600  # Set the timeout duration in seconds (e.g., 300 seconds = 5 minutes)
-        target_version_name="Comp1-${{ github.run_number }}"  # Replace with the specific version name you are looking for
+        target_version_name="Comp1-1.2.3-${{ github.run_number }}-4.5.6"  # Replace with the specific version name you are looking for
 
         end_time=$((SECONDS + timeout_duration))
 
@@ -101,4 +101,4 @@ jobs:
         fi
     - name: Create Snapshot
       run: |
-        curl --insecure --request PUT 'https://10.134.119.198:8443/cli/snapshot/createSnapshot' --header 'Content-Type: application/json' --header 'Authorization: Basic YWRtaW46YWRtaW4=' --data '{"name": "July-2023-RC-${{ github.run_number }}","application": "Hybrid App 2","description": "Some snapshot","versions": [{"HybridApp2Comp1": "Comp1-${{ github.run_number }}"},{"HybridApp2Comp2": "latest"}]}'
+        curl --insecure --request PUT 'https://10.134.119.198:8443/cli/snapshot/createSnapshot' --header 'Content-Type: application/json' --header 'Authorization: Basic YWRtaW46YWRtaW4=' --data '{"name": "July-2023-RC-${{ github.run_number }}","application": "Hybrid App 2","description": "Some snapshot","versions": [{"HybridApp2Comp1": "Comp1-1.2.3-${{ github.run_number }}-4.5.6"},{"HybridApp2Comp2": "latest"}]}'
